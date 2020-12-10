@@ -1,23 +1,18 @@
-var createError = require('http-errors');
-var express = require('express');
-var path = require('path');
-var cookieParser = require('cookie-parser');
-var logger = require('morgan');
+const createError = require('http-errors');
+const express = require('express');
+const path = require('path');
+const cookieParser = require('cookie-parser');
+const logger = require('morgan');
 const cors = require("cors");
 
-var app = express();
 
-app.use(cors());
+const configRoutes = require('./routes/config');
 
-var indexRouter = require('./routes/index');
-var usersRouter = require('./routes/users');
-var teamsRouter = require('./routes/teams');
-var contestRouter = require('./routes/contests');
-var signupRouter = require('./routes/signup');
-var signinRouter = require('./routes/signIn');
-var myProfileRouter = require('./routes/myProfile');
-var newAnalysisRouter = require('./routes/newAnalysis');
-var fixturesRouter = require('./routes/fixtures');
+const app = express();
+
+const router = express.Router();
+
+app.use(cors({origin: 'http://localhost:3000', credentials:true}));
 
 app.use(logger('dev'));
 app.use(express.json());
@@ -25,15 +20,10 @@ app.use(express.urlencoded({ extended: false }));
 app.use(cookieParser());
 app.use(express.static(path.join(__dirname, 'public')));
 
-app.use('/', indexRouter);
-app.use('/users', usersRouter);
-app.use('/teams', teamsRouter);
-app.use('/contests', contestRouter);
-app.use('/signup', signupRouter);
-app.use('/signIn', signinRouter);
-app.use('/myProfile', myProfileRouter);
-app.use('/newAnalysis', newAnalysisRouter);
-app.use('/fixtures', fixturesRouter);
+configRoutes(router);
+
+app.use('/api', router);
+
 
 // catch 404 and forward to error handler
 app.use(function(req, res, next) {

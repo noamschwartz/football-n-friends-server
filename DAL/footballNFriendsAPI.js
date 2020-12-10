@@ -1,4 +1,4 @@
-const { Client } = require("pg");
+const db = require("./db");
 const axios = require("./fetcher");
 
 const {
@@ -12,99 +12,58 @@ const {
   setLeagueStandings
 } = require("./in-memory");
 
-// FOOTBALL_API=dc11f843f2mshfd6c8fc3cbc3d35p1342e8jsn4835f270c82a
-// FOOTBALL_API_HOST=api-football-v1.p.rapidapi.com
-const basicOptions = {
-  params: { timezone: "Europe/London" },
-  headers: {
-    "x-rapidapi-key": "dc11f843f2mshfd6c8fc3cbc3d35p1342e8jsn4835f270c82a",
-    "x-rapidapi-host": "api-football-v1.p.rapidapi.com",
-  },
-};
-
-// const config = {
-//     user: process.env.USER,
-//     host: process.env.HOST,
-//     database: process.env.DATABASE,
-//     password: process.env.PASSWORD,
-//     port: process.env.PGPORT
-//   };
-
-const config = {
-  user: "postgres", //process.env.USER,
-  host: "localhost", // process.env.HOST,
-  database: "football-n-friends", //process.env.DATABASE,
-  password: "Auur.8s88", //process.env.PASSWORD,
-  port: 5432,
-};
-
-console.log(config);
-
-const client = new Client(config);
 
 const getTeams = async () => {
-  await client.connect();
-  const res = await client.query(
+  const res = await db.query(
     "SELECT id, league_id, team_name, team_logo FROM public.team;"
   );
-  await client.end();
   return res.rows;
 };
 
 const getTeam = async (id) => {
-  await client.connect();
-  const res = await client.query(
+  const res = await db.query(
     "SELECT id, league_id, team_name, team_logo FROM public.team where id=$1;",
     [id]
   );
-  await client.end();
   return res.rows[0] || null;
 };
 
 const getContests = async () => {
-  await client.connect();
-  const res = await client.query(
+  const res = await db.query(
     "SELECT id, contest_name FROM public.contest;"
   );
-  await client.end();
   return res.rows;
 };
 
 const getContest = async (contestId) => {
-  await client.connect();
-  const res = await client.query(
+  const res = await db.query(
     "SELECT id, contest_name FROM public.contest WHERE id=$1;",
     [contestId]
   );
-  await client.end();
   return res.rows || null;
 };
 const addUser = async () => {
-  //await client.connect();
   //post to users table {name: req.body.name, email:req.body.password, email:req.body.password, image:req.body.image}
   return;
 };
 const signIn = async () => {
-  //await client.connect();
   //post to users table {name: req.body.name, email:req.body.password, email:req.body.password, image:req.body.image}
   return;
 };
 
-const getUser = async (userId) => {
-  await client.connect();
-  const res = await client.query(
-    "SELECT id, name, password, email, image FROM public.users WHERE id=$1;",
-    [userId]
-  );
-  await client.end();
-  return res.rows;
-};
+// const getUser = async (userId) => {
+//   const res = await db.query(
+//     "SELECT id, name, password, email, image FROM public.users WHERE id=$1;",
+//     [userId]
+//   );
+//   return res.rows;
+// };
 
-const addAnalysis = async () => {
-  //await client.connect();
+const addAnalysis = async (analysis) => {
   //post to user_analysis table
   // {userId: ??? fixtureId: req.body.fixtureId, title: req.body.title, pick: req.body.pick , analysis: req.body.analysis,  confidence: req.body.confidence,  likes: null, date: new Date()}
-  return;
+  //add the analysis to the database
+  return (analysis);
 };
 
 const getNextFixtures = async (leagueId, limit = 10) => {
@@ -182,6 +141,15 @@ const getStandings = async (leagueId) => {
     
       return result;
   }
+
+  const getUser = async (userMail, userPassword) => {
+    
+    const res = await db.query(
+      "SELECT id, name, password, email, image FROM public.users WHERE email=$1 and password=$2",
+      [userMail, userPassword]
+    );
+    return res.rows;
+  };
 
 
 module.exports = {

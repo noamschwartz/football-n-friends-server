@@ -10,7 +10,14 @@ const context = {
     },
     leagueStandings: {
         //[leagueId]: {...}
+    },
+    userAnalysis:{
+        //[fixtureId]: {...}
     }
+}
+const setFixtureAnalysis = (analysis)=>{
+    
+    context.userAnalysis[analysis.fixtureId] = analysis;
 }
 
 const setNextFixture = (leagueId, data) => {
@@ -28,7 +35,7 @@ const setLeagueStandings = (leagueId, data) => {
     context.leagueStandings[leagueId] = data;
 }
 
-
+const getFixtureAnalysis = fixtureId=>context.userAnalysis[fixtureId];
 const getNextFixture = leagueId => context.nextFixtures[leagueId];
 const getFixture = fixtureId => context.fixtures[fixtureId];
 const getStatsOfFixture = fixtureId => context.fixtureStats[fixtureId];
@@ -42,5 +49,7 @@ module.exports = {
     setStatsOfFixture,
     getStatsOfFixture,
     setLeagueStandings,
-    getLeagueStandings
+    getLeagueStandings,
+    setFixtureAnalysis,
+    getFixtureAnalysis
 };

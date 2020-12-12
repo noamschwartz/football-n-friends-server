@@ -30,8 +30,13 @@ const configRoutes = (router) => {
       return;
     }
 
-    const userData = { id: user.id, name: user.name, email: user.email, image: user.image };
-    res.cookie("user", JSON.stringify(userData), {encode: String});
+    const userData = {
+      id: user.id,
+      name: user.name,
+      email: user.email,
+      image: user.image,
+    };
+    res.cookie("user", JSON.stringify(userData), { encode: String });
     res.json("user:" + req.cookies.user);
     // .send(req.cookies.user);
   });
@@ -42,8 +47,8 @@ const configRoutes = (router) => {
   });
 
   router.post("/logout", async (req, res, next) => {
-    res.clearCookie("id").clearCookie("name").clearCookie("email");
-    res.send("cookie was cleared");
+    res.cookie("user", "", { expire: Date.now() - 50000 });
+    res.status(200).json(true);
   });
 
   return router;

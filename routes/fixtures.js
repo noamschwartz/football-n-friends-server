@@ -3,6 +3,7 @@ const {getNextFixtures, getFixtureInfo,getFixtureStats,getStandings} = require('
 
 var router = express.Router();
 
+
 router.get('/:fixtureId', async (req, res) => {
   const {fixtureId} = req.params;
   const result = await getFixtureInfo(fixtureId);

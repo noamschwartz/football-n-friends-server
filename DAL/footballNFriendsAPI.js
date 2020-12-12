@@ -1,3 +1,4 @@
+const e = require("express");
 const db = require("./db");
 const axios = require("./fetcher");
 
@@ -9,9 +10,18 @@ const {
   getStatsOfFixture,
   setStatsOfFixture,
   getLeagueStandings,
-  setLeagueStandings
+  setLeagueStandings,
+  setFixtureAnalysis,
+  getFixtureAnalysis,
 } = require("./in-memory");
 
+const basicOptions = {
+  params: { timezone: "Europe/London" },
+  headers: {
+    "x-rapidapi-key": "dc11f843f2mshfd6c8fc3cbc3d35p1342e8jsn4835f270c82a",
+    "x-rapidapi-host": "api-football-v1.p.rapidapi.com",
+  },
+};
 
 const getTeams = async () => {
   const res = await db.query(
@@ -29,9 +39,7 @@ const getTeam = async (id) => {
 };
 
 const getContests = async () => {
-  const res = await db.query(
-    "SELECT id, contest_name FROM public.contest;"
-  );
+  const res = await db.query("SELECT id, contest_name FROM public.contest;");
   return res.rows;
 };
 
@@ -59,13 +67,6 @@ const signIn = async () => {
 //   return res.rows;
 // };
 
-const addAnalysis = async (analysis) => {
-  //post to user_analysis table
-  // {userId: ??? fixtureId: req.body.fixtureId, title: req.body.title, pick: req.body.pick , analysis: req.body.analysis,  confidence: req.body.confidence,  likes: null, date: new Date()}
-  //add the analysis to the database
-  return (analysis);
-};
-
 const getNextFixtures = async (leagueId, limit = 10) => {
   const result = getNextFixture(leagueId);
   if (!result) {
@@ -77,6 +78,7 @@ const getNextFixtures = async (leagueId, limit = 10) => {
       setNextFixture(leagueId, data.api.fixtures);
       return data.api.fixtures;
     } catch (e) {
+      console.log("error");
       throw e;
     }
   }
@@ -122,35 +124,74 @@ const getFixtureStats = async (fixtureId) => {
   return result;
 };
 
-
 const getStandings = async (leagueId) => {
-    const result = getLeagueStandings(leagueId);
-    if (!result) {
-        try {
-          const { data } = await axios.request({
-            ...basicOptions,
-            url: `leagueTable/${leagueId}`,
-          });
-          setLeagueStandings(leagueId, data.api.standings[0]);
-          return data.api.standings[0];
-        } catch (e) {
-          console.error("getStandings error", e);
-          throw e;
-        }
-      }
-    
-      return result;
+  const result = getLeagueStandings(leagueId);
+  if (!result) {
+    try {
+      const { data } = await axios.request({
+        ...basicOptions,
+        url: `leagueTable/${leagueId}`,
+      });
+      setLeagueStandings(leagueId, data.api.standings[0]);
+      return data.api.standings[0];
+    } catch (e) {
+      console.error("getStandings error", e);
+      throw e;
+    }
   }
 
-  const getUser = async (userMail, userPassword) => {
-    
-    const res = await db.query(
-      "SELECT id, name, password, email, image FROM public.users WHERE email=$1 and password=$2",
-      [userMail, userPassword]
-    );
-    return res.rows;
-  };
+  return result;
+};
 
+const getUser = async (userMail, userPassword) => {
+  console.log(userMail, userPassword);
+  const res = await db.query(
+    "SELECT id, name, password, email, image FROM public.users WHERE email=$1 and password=$2",
+    [userMail, userPassword]
+  );
+  return res.rows;
+};
+
+const addAnalysis = async (userId, analysis) => {
+  //post to user_analysis table
+  // {userId: ??? fixtureId: req.body.fixtureId, title: req.body.title, pick: req.body.pick , analysis: req.body.analysis,  confidence: req.body.confidence,  likes: null, date: new Date()}
+  //add the analysis to the database
+  console.log(analysis.fixtureId);
+
+  setFixtureAnalysis(analysis);
+  //add to db
+  const post = await db.query(
+    "INSERT INTO public.user_analysis( id, user_id, fixture_id, pick, analysis, date, likes, title, league_id) VALUES ($1, $2, $3, $4, $5, $6, $7, $8);",
+    [
+      //change to proper pgadmin key
+      Math.random() * 1000,
+      userId,
+      analysis.fixtureId,
+      analysis.pick,
+      analysis.analysis,
+      new Date(),
+      0,
+      analysis.title,
+    ]
+  );
+  return post;
+};
+
+const getAnalysis = async (fixtureId) => {
+  const result = getFixtureAnalysis(fixtureId);
+  if (!result) {
+    try {
+      const res = await db.query(
+        "SELECT id, user_id, fixture_id, pick, analysis, date, likes, title, league_id FROM public.user_analysis WHERE fixture_id=$1;",
+        [fixtureId]
+      );
+      return res.rows;
+    } catch (e) {
+      console.error("getAnalysis error", e);
+      throw e;
+    }
+  }
+};
 
 module.exports = {
   getTeams,
@@ -164,5 +205,6 @@ module.exports = {
   getNextFixtures,
   getFixtureInfo,
   getFixtureStats,
-  getStandings
+  getStandings,
+  getAnalysis,
 };
